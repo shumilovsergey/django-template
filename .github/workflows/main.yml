@@ -1,0 +1,30 @@
+name: Build and publish a Docker image to ghcr.io
+on:
+  release:
+    types: [created, published]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment"
+        required: true
+        default: "local"
+        type: choice
+        options:
+          - local
+          - production
+
+jobs:
+  docker_publish:
+    runs-on: "ubuntu-20.04"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Copy environment settings
+        run: ln -sf .env.${{ inputs.environment }}.dist .env
+
+      - name: Build and publish a Docker image for ${{ github.repository }}
+        uses: macbre/push-to-ghcr@master
+        with:
+          image_name: ${{ github.repository }}-${{ inputs.environment }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
